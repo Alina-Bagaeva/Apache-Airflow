@@ -130,7 +130,11 @@ services:
     <<: *airflow-common
     command: webserver
     ports:
-      - "8080:8080"
+      - "0.0.0.0:8080:8080"  # ✅ Слушает ВСЕ интерфейсы
+    environment:
+      <<: *airflow-common-env
+      AIRFLOW__WEBSERVER__BASE_URL: "http://194.67.124.212:8080"  # ✅ Обязательно!
+      AIRFLOW__WEBSERVER__EXPOSE_CONFIG: 'true'  # ✅ Для отладки
     healthcheck:
       test: ["CMD", "curl", "--fail", "http://localhost:8080/health"]
       interval: 30s
