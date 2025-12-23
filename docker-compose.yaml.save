@@ -93,7 +93,7 @@ x-airflow-common:
       condition: service_healthy
     postgres:
       condition: service_healthy
-#  restart: unless-stopped
+  restart: unless-stopped
 
 services:
   postgres:
@@ -167,6 +167,7 @@ services:
     <<: *airflow-common
     command: celery worker
     healthcheck:
+      # yamllint disable rule:line-length
       test:
         - "CMD-SHELL"
         - 'celery --app airflow.providers.celery.executors.celery_executor.app inspect ping -d "celery@$${HOSTNAME}" || celery --app airflow.executors.celery_executor.app inspect ping -d "celery@$${HOSTNAME}"'
@@ -174,11 +175,13 @@ services:
       timeout: 10s
       retries: 5
       start_period: 30s
-    mem_limit: 6g        # максимум памяти контейнера
-    mem_reservation: 4g  # гарантированный минимум
-    cpus: 3.0
+    mem_limit: 16g        # максимум памяти контейнера
+    mem_reservation: 14g  # гарантированный минимум
+    cpus: 6
     environment:
       <<: *airflow-common-env
+      # Required to handle warm shutdown of the celery workers properly
+      # See https://airflow.apache.org/docs/docker-stack/entrypoint.html#signal-propagation
       DUMB_INIT_SETSID: "0"
     restart: unless-stopped
     depends_on:
@@ -198,8 +201,7 @@ services:
     restart: unless-stopped
     depends_on:
       <<: *airflow-common-depends-on
-      airflow-init:
-        condition: service_completed_successfully
+      airflow-init        condition: service_completed_successfully
 
   airflow-init:
     <<: *airflow-common
@@ -300,14 +302,6 @@ services:
       <<: *airflow-common-depends-on
       airflow-init:
         condition: service_completed_successfully
-  prometheus:
-    image: prom/prometheus
-    container_name: prometheus
-    ports:
-      - "9090:9090"
-    volumes:
-      - ./prometheus.yml:/etc/prometheus/prometheus.yml
-    restart: unless-stopped
 
 volumes:
   postgres-db-volume:
