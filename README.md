@@ -1,103 +1,276 @@
+Ниже готовый `README.md` под мини‑продакшен на отдельном сервере.
+
+***
+
 # Apache Airflow 2.11.0 Docker (CeleryExecutor + Code Editor)
 
-Расширенная Docker-сборка Apache Airflow с поддержкой **Code Editor**, ClickHouse, MySQL, Telegram и HTTP провайдеров. Оптимизирована для разработки ETL/DWH пайплайнов.
+Расширенная Docker‑сборка Apache Airflow с поддержкой **Code Editor**, ClickHouse, MySQL, HTTP/Telegram провайдеров, Prometheus и скрипта резервного копирования БД.
 
-## ✨ Особенности
-- ✅ **Apache Airflow 2.11.0** (CeleryExecutor)
-- ✅ **airflow-code-editor** — редактирование/создание DAG'ов и папок в UI
-- ✅ **ClickHouse plugin** для аналитики
-- ✅ **PostgreSQL 13 + Redis 7.2** (брокер/результаты)
-- ✅ **16GB RAM / 6 CPU** для worker'а
-- ✅ Тестирование подключений в UI
-- ✅ Flower (опционально)
+## 1. Минимальные требования сервера
 
-## 📋 Предварительная подготовка
+- OS: Ubuntu 20.04+ / Debian 11+ (x86_64)
+- vCPU: **4**
+- RAM: **8 GB**
+- Диск: **20 GB+**
+- Открытые порты:
+  - 80 (HTTP → nginx → Airflow)
+  - 8080 (Airflow UI, можно оставить только внутри)
+  - 5432 (PostgreSQL — лучше закрыть firewall’ом)
+  - 9090 (Prometheus, опционально)
 
-**Обязательно выполните перед `docker-compose up`:**
+## 2. Установка Docker и Docker Compose
 
-sudo mkdir -p dags logs config plugins
-sudo chown -R 50000:0 dags logs config plugins
-sudo chmod -R 775 dags logs config plugins
+```bash
+# обновить пакеты
+sudo apt update
 
-> **Почему?** Airflow работает от UID `50000`. Без правильных прав Code Editor не сможет создавать папки в `./dags`.
+# установить Docker
+sudo apt install -y ca-certificates curl gnupg lsb-release
 
-## 🚀 Быстрый старт
+curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /usr/share/keyrings/docker.gpg
 
-1. **Скачайте файлы:**
-docker-compose.yaml, Dockerfile, requirements.txt, .env
+echo \
+  "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu \
+  $(lsb_release -cs) stable" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
 
-2. **Запуск:**
-docker-compose build
-docker-compose up -d
+sudo apt update
+sudo apt install -y docker-ce docker-ce-cli containerd.io
 
-3. **Доступ:**
-- **UI:** http://localhost:8080 (login: `airflow` / `airflow`)
-- **PostgreSQL:** localhost:5432
-- **Flower:** `docker-compose --profile flower up` → localhost:5555
+# дать право запускать docker без sudo (опционально, после релога)
+sudo usermod -aG docker "$USER"
+```
 
-## 📁 Структура проекта
-.
-├── dags/ # DAG'и (монтируется в /opt/airflow/dags)
-├── logs/ # Логи
-├── config/ # airflow.cfg (опционально)
-├── plugins/ # Кастомные плагины
-├── docker-compose.yaml
-├── Dockerfile
-├── requirements.txt
-└── .env
+Docker Compose v2 уже встроен в `docker` как `docker compose`. Проверка:
 
-## ⚙️ Конфигурация (.env)
+```bash
+docker --version
+docker compose version
+```
 
+## 3. Клонирование репозитория
+
+```bash
+cd /root          # или любой другой каталог
+git clone https://github.com/Alina-Bagaeva/Apache-Airflow.git
+cd Apache-Airflow
+```
+
+## 4. Настройка `.env`
+
+Открой `.env` и отредактируй:
+
+```bash
 export AIRFLOW_UID=50000
+
+# корень для Code Editor
 AIRFLOW__CODE_EDITOR__ROOT_DIRECTORY=/opt/airflow/dags
 AIRFLOW__CODE_EDITOR__ENABLED=true
 
-## 🔧 Использование Code Editor
+# СИЛЬНЫЕ пароли (ОБЯЗАТЕЛЬНО заменить)
+POSTGRES_PASSWORD=YourStrongPgPassword123!
+_AIRFLOW_WWW_USER_PASSWORD=YourStrongAirflowPassword123!
 
-1. **Admin → Plugins** → **Airflow Code Editor**
-2. Создавайте папки/файлы прямо в UI
-3. Работает с `./dags` на хосте
+# безопасность веб‑интерфейса
+AIRFLOW__WEBSERVER__AUTHENTICATE=true
+AIRFLOW__WEBSERVER__EXPOSE_CONFIG=false
+AIRFLOW__CORE__SECURE_MODE=true
+AIRFLOW__WEBSERVER__RBAC=true
 
-## 🛠 Дополнительные команды
+# ВАЖНО: заменить IP на IP нового сервера
+AIRFLOW__WEBSERVER__BASE_URL=http://<NEW_SERVER_IP>:8080
+```
 
-Пересборка
-docker-compose down && docker-compose up --build -d
+> Пример: `AIRFLOW__WEBSERVER__BASE_URL=http://194.67.124.212:8080`
 
-Логи webserver
-docker-compose logs -f airflow-webserver
+## 5. Права на директории проекта
 
-CLI доступ
-docker-compose run --rm airflow-cli
+```bash
+cd /root/Apache-Airflow
 
-Flower (мониторинг Celery)
-docker-compose --profile flower up flower
+sudo mkdir -p dags logs config plugins backups
+sudo chown -R 50000:0 dags logs config plugins backups
+sudo chmod -R 775 dags logs config plugins backups
+```
 
+Это нужно, чтобы Code Editor и Airflow могли создавать файлы/папки.
 
-## 📦 Установленные пакеты (requirements.txt)
+## 6. Первый запуск Airflow
 
-airflow-clickhouse-plugin==1.5.0
+### 6.1. Инициализация БД (airflow-init один раз)
 
-airflow-code-editor
+```bash
+docker compose run --rm airflow-init
+```
 
-pandas>=1.5.0, numpy>=1.21.0
+Убедись, что команда завершилась без ошибок (в конце видно версию `2.11.0`).
 
-mysql-connector-python>=8.0.0
+### 6.2. Запуск основного стека
 
-apache-airflow-providers-http
+```bash
+docker compose up -d
+docker compose ps
+```
 
-apache-airflow-providers-telegram
+Ожидаемые сервисы в статусе `Up`:
 
-## ⚠️ Важные замечания
+- postgres
+- redis
+- airflow-webserver
+- airflow-scheduler
+- airflow-worker
+- airflow-triggerer
+- (опционально) prometheus
 
-- **Разработка только!** Не для продакшена
-- **Ресурсы:** минимум 4GB RAM, 2 CPU, 10GB диск
-- **После `docker-compose down`:** повторите chown команд для папок
-- **Custom DAG'и:** кладите в `./dags`, автообновление
+Проверка здоровья webserver:
 
-## 🔗 Полезные ссылки
-- [Официальная Docker docs](https://airflow.apache.org/docs/docker-stack/)
-- [airflow-code-editor GitHub](https://github.com/andreax79/airflow-code-editor)
-- [ClickHouse plugin](https://github.com/ClickHouse/airflow-clickhouse-plugin)
+```bash
+curl http://localhost:8080/health
+```
 
----
-**Сборка для data engineering задач с полной поддержкой Code Editor! 🚀**
+Если статус `healthy`, UI доступен по:
+
+- `http://<NEW_SERVER_IP>:8080`
+
+Логин по умолчанию:
+
+- username: `airflow`
+- password: значение `_AIRFLOW_WWW_USER_PASSWORD` из `.env`.
+
+## 7. Nginx reverse proxy на порт 80
+
+Файл `nginx.conf` уже в репозитории:
+
+```nginx
+server {
+    listen 80;
+    location / {
+        proxy_pass http://host.docker.internal:8080;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+}
+```
+
+Запуск контейнера nginx:
+
+```bash
+docker run -d --name nginx-airflow \
+  -p 80:80 \
+  -v /root/Apache-Airflow/nginx.conf:/etc/nginx/conf.d/default.conf \
+  nginx
+```
+
+Теперь UI доступен по:
+
+- `http://<NEW_SERVER_IP>` (порт 80).
+
+## 8. Prometheus (мониторинг)
+
+Prometheus уже описан в `docker-compose.yaml`:
+
+```yaml
+prometheus:
+  image: prom/prometheus
+  container_name: prometheus
+  ports:
+    - "9090:9090"
+  volumes:
+    - ./prometheus.yml:/etc/prometheus/prometheus.yml
+  restart: unless-stopped
+```
+
+Файл `prometheus.yml`:
+
+```yaml
+global:
+  scrape_interval: 15s
+
+scrape_configs:
+  - job_name: 'airflow-webserver'
+    static_configs:
+      - targets: ['host.docker.internal:8080']
+```
+
+Запуск:
+
+```bash
+docker compose up -d prometheus
+```
+
+UI Prometheus:
+
+- `http://<NEW_SERVER_IP>:9090`
+
+## 9. Ресурсы для worker
+
+В `docker-compose.yaml` секция `airflow-worker` уже настроена для сервера 4 vCPU / 8 GB RAM:
+
+```yaml
+airflow-worker:
+  <<: *airflow-common
+  command: celery worker
+  ...
+  mem_limit: 6g
+  mem_reservation: 4g
+  cpus: 3.0       # использует до 3 vCPU из 4
+```
+
+При необходимости можно изменить эти значения под свою нагрузку.
+
+## 10. Скрипт резервного копирования БД
+
+Файл `backup.sh`:
+
+```bash
+#!/bin/bash
+TIMESTAMP=$(date +%Y%m%d_%H%M%S)
+BACKUP_DIR="./backups"
+mkdir -p "$BACKUP_DIR"
+
+docker compose exec -T postgres \
+  pg_dump -U airflow airflow > "$BACKUP_DIR/airflow_backup_${TIMESTAMP}.sql"
+
+echo "Backup created: $BACKUP_DIR/airflow_backup_${TIMESTAMP}.sql"
+```
+
+Сделать исполняемым:
+
+```bash
+chmod +x backup.sh
+```
+
+Тест:
+
+```bash
+./backup.sh
+ls -la backups/
+```
+
+### Cron для ежедневного бэкапа (в 02:00)
+
+```bash
+crontab -e
+```
+
+Добавить строку (путь скорректировать при необходимости):
+
+```cron
+0 2 * * * cd /root/Apache-Airflow && ./backup.sh >> /var/log/airflow_backup.log 2>&1
+```
+
+## 11. Типовой цикл деплоя новой версии
+
+1. Локально вносите изменения и пушите в GitHub.
+2. На сервере:
+
+```bash
+cd /root/Apache-Airflow
+git pull
+docker compose down
+docker compose up -d --build
+docker compose ps
+```
+
+1. Проверяете UI и health‑статус.
