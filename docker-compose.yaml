@@ -93,7 +93,7 @@ x-airflow-common:
       condition: service_healthy
     postgres:
       condition: service_healthy
-    restart: unless-stopped
+  restart: unless-stopped
 
 services:
   postgres:
