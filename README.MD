@@ -1,8 +1,3 @@
-Добавим раздел с альтернативными портами. Вот обновленный README.md с добавленным разделом:
-
----
-
-```markdown
 # Apache Airflow — Развертывание на облачном сервере
 
 ![Apache Airflow](https://img.shields.io/badge/Apache%20Airflow-2.11.0-blue)
@@ -37,7 +32,6 @@ Production-готовый Apache Airflow 2.11.0 с CeleryExecutor, PostgreSQL, R
 
 ## 🏗️ Архитектура
 
-```mermaid
 graph TB
     User[Пользователь] --> NGINX[NGINX Reverse Proxy]
     NGINX -->|HTTPS| AirflowWS[Airflow Webserver]
@@ -60,7 +54,6 @@ graph TB
         Redis
         PostgresDB
     end
-```
 
 ## ⚙️ Предварительные требования
 
