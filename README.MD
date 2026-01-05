@@ -32,6 +32,7 @@ Production-готовый Apache Airflow 2.11.0 с CeleryExecutor, PostgreSQL, R
 
 ## 🏗️ Архитектура
 
+```mermaid
 graph TB
     User[Пользователь] --> NGINX[NGINX Reverse Proxy]
     NGINX -->|HTTPS| AirflowWS[Airflow Webserver]
@@ -54,7 +55,7 @@ graph TB
         Redis
         PostgresDB
     end
-
+```
 ## ⚙️ Предварительные требования
 
 ### Аппаратные требования
