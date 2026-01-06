@@ -1,8 +1,3 @@
-Добавим раздел с альтернативными портами. Вот обновленный README.md с добавленным разделом:
-
----
-
-```markdown
 # Apache Airflow — Развертывание на облачном сервере
 
 ![Apache Airflow](https://img.shields.io/badge/Apache%20Airflow-2.11.0-blue)
@@ -61,7 +56,6 @@ graph TB
         PostgresDB
     end
 ```
-
 ## ⚙️ Предварительные требования
 
 ### Аппаратные требования
