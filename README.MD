@@ -287,7 +287,7 @@ docker compose -f docker-compose.yaml -f ports-override.yaml up -d
 Добавьте в `.env`:
 ```bash
 # Укажите порт в доменном имени
-DOMAIN_NAME=194.67.124.212:8443
+DOMAIN_NAME=ВАШ IP:8443
 
 # Или отдельно
 NGINX_HTTP_PORT=8081
