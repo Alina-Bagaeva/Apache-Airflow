@@ -44,7 +44,7 @@ x-airflow-common: &airflow-common
     AIRFLOW__SCHEDULER__ENABLE_HEALTH_CHECK: 'true'
 
     # Для публичного доступа
-    AIRFLOW__WEBSERVER__BASE_URL: https://194.55.245.210
+    AIRFLOW__WEBSERVER__BASE_URL: https://ВАШ IP
     AIRFLOW__WEBSERVER__COOKIE_SAMESITE: 'Lax'
     AIRFLOW__WEBSERVER__COOKIE_SECURE: 'true'
 
