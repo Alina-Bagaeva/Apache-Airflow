@@ -411,7 +411,7 @@ sudo ufw allow 9091/tcp
    AIRFLOW__API__AUTH_BACKENDS=airflow.api.auth.backend.session
    ```
 
-2. **Автоматическое обновление сертификатов**:
+2. **Автоматическое обновление сертификатов**(не требуется,если использовался [Вариант A: Self-signed сертификат](#вариант-a-self-signed-сертификат-для-тестированияиспользуемый-вариант)):
    ```bash
    # Добавьте в crontab
    0 3 * * * certbot renew --quiet && docker compose restart nginx
@@ -433,6 +433,8 @@ chmod +x backup.sh
 crontab -e
 # Добавьте строку:
 0 2 * * * /путь/к/Apache-Airflow/backup.sh
+# Или если хотите получать уведомления об ошибках по email (опционально):
+0 2 * * * /путь/к/Apache-Airflow/backup.sh 2>&1 | mail -s "Airflow Backup Report" ваш-email@example.com
 ```
 
 ### Восстановление из бэкапа
