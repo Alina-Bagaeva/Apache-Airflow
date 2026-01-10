@@ -387,7 +387,7 @@ sudo ufw allow 9091/tcp
   sudo ufw --force enable
   ```
 
-- [ ] **Ограничьте доступ по IP** в `nginx/conf.d/airflow.conf`:
+- [ ] **Ограничьте доступ по IP** в `nginx/conf.d/airflow.conf`(НА ДАННОМ ЭТАПЕ НЕ НУЖНО - ТРЕБУЕТ ДОРАБОТКИ):
   ```nginx
   location ~ ^/(api/v1/|flower|variables|connections) {
     allow 192.168.1.0/24;    # Ваша локальная сеть
