@@ -120,6 +120,7 @@ services:
     # ⛔ НЕТ публичных портов
     expose:
       - 8080  # только внутри Docker сети
+      - 8793  # для логов
     healthcheck:
       test: ["CMD", "curl", "--fail", "http://localhost:8080/health"]
       interval: 30s
