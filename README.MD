@@ -450,6 +450,15 @@ sudo ufw allow 9091/tcp
   sudo ufw allow 443/tcp     # HTTPS (или альтернативный порт)
   sudo ufw --force enable
   ```
+- [ ] **Смена владельца для папки logs**: (ОБЯЗАТЕЛЬНО)
+  ```bash
+  cd Apache-Airflow
+  sudo chown -R 50000:50000 logs
+  ```
+- [ ] **Смена владельца для папки dags(чтобы можно было сохранять и загружать dags на сервер через UI Airflow)**: (ОБЯЗАТЕЛЬНО)
+  ```bash
+  cd Apache-Airflow
+ sudo chown -R 50000:50000 dags
 
 - [ ] **Ограничьте доступ по IP** в `nginx/conf.d/airflow.conf`(НА ДАННОМ ЭТАПЕ НЕ НУЖНО - ТРЕБУЕТ ДОРАБОТКИ):
   ```nginx
