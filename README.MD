@@ -212,6 +212,7 @@ htpasswd nginx/.htpasswd user2
 
 ```bash
 nano nginx/conf.d/airflow.conf
+```
 
 В блоке server для порта 80 и в блоке для порта 443 найдите строки, содержащие server_name ВАШ IP localhost; и замените ВАШ IP на фактический IP вашего сервера.
 Также в блоке для порта 80 исправьте строку return 301 https://ВАШ IP$request_uri;, подставив ваш IP. Пример исправления:
@@ -228,6 +229,7 @@ server {
     server_name 155.212.219.239 localhost;
     ...
 }
+```
 
 #### 7.2. Дополнительное исправление для корректной работы входа в Airflow
 Если после запуска при попытке открыть веб-интерфейс возникает ошибка 502 Bad Gateway, проверьте блок, отвечающий за проксирование логов:
@@ -238,11 +240,13 @@ location ~ ^/log(/?.*)?$ {
     proxy_pass http://airflow_logs$request_uri;
     ...
 }
+```
 
 #### 7.3. Правка переменной окружения в docker-compose.yaml
 
 ```bash
 nano docker-compose.yaml
+```
 
 Вместо ВАШ IP укажите реальный IP вашего сервера.
 
