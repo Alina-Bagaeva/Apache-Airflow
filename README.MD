@@ -458,7 +458,7 @@ sudo ufw allow 9091/tcp
 - [ ] **Смена владельца для папки dags(чтобы можно было сохранять и загружать dags на сервер через UI Airflow)**: (ОБЯЗАТЕЛЬНО)
   ```bash
   cd Apache-Airflow
- sudo chown -R 50000:50000 dags
+  sudo chown -R 50000:50000 dags
 
 - [ ] **Ограничьте доступ по IP** в `nginx/conf.d/airflow.conf`(НА ДАННОМ ЭТАПЕ НЕ НУЖНО - ТРЕБУЕТ ДОРАБОТКИ):
   ```nginx
